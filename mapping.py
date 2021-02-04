@@ -70,7 +70,13 @@ class PixelStrip:
         strip_idx = 0
         # print(f"generating pixel mapping for y {row_idx_start}, {row_idx_end}, {row_idx_step}")
         for y in range(row_idx_start, row_idx_end, row_idx_step):
-            is_zig = y % 2 == 1
+            if start_bottom:
+                row_number = self.rows - y
+            else:
+                row_number = y
+
+            is_zig = row_number % 2 == 1
+
             if is_zig and start_left is True:
                 col_idx_start = 0
                 col_idx_end = self.row_length
