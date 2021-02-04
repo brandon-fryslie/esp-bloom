@@ -23,13 +23,21 @@ class PixelAddress:
         return self.__str__()
 
 class PixelStrip:
-    def __init__(self, strip_addr: str, row_length: int, rows: int, start_left: bool, start_bottom: bool, region_fn: Callable[[PixelAddress], str]):
+    def __init__(self, strip_addr: str, universe: int,
+                 row_length: int, rows: int, start_left: bool,
+                 start_bottom: bool, region_fn: Callable[[PixelAddress], str],
+                 monitor: int, regions: List[str],
+        ):
         self.strip_addr = strip_addr
+        self.universe = universe
         self.row_length = row_length
         self.rows = rows
         self.start_left = start_left
         self.start_bottom = start_bottom
         self.region_fn = region_fn
+        self.monitor = monitor
+        self.regions = regions
+
         self.pixels = self.generate_pixel_mapping()
 
     def __str__(self):
