@@ -27,13 +27,6 @@ def signal_handler(sig, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 
-def get_pixel_data(monitor_num: int, region: str, rows, row_length, save_image):
-    bottom_img = img_proc.capture_and_resize(region, monitor_num, row_length, rows, save_image)
-    pixel_data = img_proc.create_color_data(bottom_img, pixel_strip, "bottom")
-    return pixel_data
-
-
-
 def send_data(sender, pixel_strips: List[PixelStrip], save_image):
     # Turn off automatic flushing so we can send everything at the same time
     sender.manual_flush = True
@@ -42,6 +35,9 @@ def send_data(sender, pixel_strips: List[PixelStrip], save_image):
         for region in pixel_strip.regions:
             img = img_proc.capture_and_resize(region, pixel_strip.monitor, pixel_strip.row_length, pixel_strip.rows, save_image)
             pixel_data += img_proc.create_color_data(img, pixel_strip, region)
+
+        # print number of pixels
+        # print(len(pixel_data)/4)
 
         # Set pixel data for the universe
         sender[pixel_strip.universe].dmx_data = pixel_data
@@ -58,7 +54,6 @@ def flatten(l: List) -> List:
 
 # Send a solid color that changes every 2s
 def test_strips(pixel_strips):
-    sample_data = (255, 0, 0, 0) * 300
     sample_data = {
         "red": (255, 0, 0, 0) * 300,
         "green": (0, 255, 0, 0) * 300,
@@ -83,16 +78,15 @@ def test_strips(pixel_strips):
 parser = argparse.ArgumentParser(description='esp-based bias lighting')
 parser.add_argument('--debug', dest='debug', action='store_true', default=False, help='debug mode')
 parser.add_argument('--test', dest='test', action='store_true', default=False, help='test mode')
-parser.add_argument('--slow', dest='slow', action='store_true', default=False, help='slow + save images mode')
+parser.add_argument('--slow', dest='slow', action='store_true', default=False, help='slow mode')
+parser.add_argument('--save', dest='save', action='store_true', default=False, help='save images')
+parser.add_argument('--profile', dest='profile', action='store_true', default=False, help='profile')
 # parser.add_argument('--fps', dest='fps', action='store', default=30, help='fps')
 args = parser.parse_args()
 
 if args.debug:
     print("DEBUG MODE ENABLED")
     logging.basicConfig(level=logging.DEBUG)
-
-rows = 4
-row_length = 29
 
 frame_rate = 3 if args.debug or args.slow else 30
 sleep_time = round(1/frame_rate, 3)-.001
@@ -104,28 +98,48 @@ def _region_fn_universe_1(pixel: PixelAddress) -> str:
     else:
         return "top"
 
+# function to determine if a specific pixel falls into a specific region
+def _region_fn_universe_3(pixel: PixelAddress) -> str:
+    return "bottom"
+
+# 192.168.1.237
 pixel_strip1 = PixelStrip(
-    "universe-1", 1, row_length=29, rows=4, start_left=True,
+    strip_addr="192.168.1.237", universe=1, row_length=29, rows=4, start_left=True,
     start_bottom=True, region_fn=_region_fn_universe_1,
     monitor=3, regions=["bottom", "top"],
 )
 
 pixel_strip2 = PixelStrip(
-    "universe-2", 2, row_length=29, rows=1, start_left=True,
+    strip_addr="192.168.1.240", universe=2, row_length=29, rows=4, start_left=True,
     start_bottom=True, region_fn=_region_fn_universe_1,
+    monitor=1, regions=["bottom", "top"],
+)
+
+pixel_strip3 = PixelStrip(
+    strip_addr="192.168.1.243", universe=3, row_length=75, rows=1, start_left=True,
+    start_bottom=True, region_fn=_region_fn_universe_3,
     monitor=1, regions=["bottom"],
 )
 
 pixel_strips = [
     pixel_strip1,
     pixel_strip2,
+    pixel_strip3,
 ]
 
-sender = espixelstick.create_sender(fps=frame_rate)
+sender = espixelstick.create_sender(pixel_strips, fps=frame_rate)
 # if args.debug:
 #     send_data(sender, pixel_strip, rows, row_length, True)
 #     sender.stop()
 #     sys.exit(0)
+
+if args.profile:
+    for i in range(0, 100):
+        send_data(sender, pixel_strips, save_image=args.save)
+        time.sleep(sleep_time)
+
+    sender.stop()
+    sys.exit(0)
 
 if args.test:
     test_strips(pixel_strips)
@@ -133,6 +147,6 @@ if args.test:
 
 # for i in range(0, 1000):
 while True:
-    send_data(sender, pixel_strips, save_image=args.slow)
+    send_data(sender, pixel_strips, save_image=args.save)
     time.sleep(sleep_time)
 

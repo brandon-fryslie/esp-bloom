@@ -56,12 +56,12 @@ def capture_and_resize(region: str, monitor_no: int, img_x: int, img_y: int, sav
         img = PIL.Image.frombytes("RGB", screenshot.size, screenshot.bgra, "raw", "BGRX")  # Convert to PIL.Image
 
         if save_image:
-            img.save(f"{monitor}-{region}-bb.png")
+            img.save(f"saved-images/monitor-{monitor_no}-{region}.png")
 
         # Resize to the size of the pixel bounds
         resized = img.resize((img_x, img_y), resample=PIL.Image.BILINEAR)
         if save_image:
-            resized.save(f"{monitor}-{region}-resized.png")
+            resized.save(f"saved-images/monitor-{monitor_no}-{region}-resized.png")
 
     return resized
 

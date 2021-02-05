@@ -1,5 +1,5 @@
 sacn==1.4.6
-pillow==8.1.0
+pillow-simd==8.1.0
 pyobjc-framework-Quartz==7.1
 screeninfo==0.6.7
 mss==6.1.0
