@@ -21,21 +21,6 @@ from region import ScreenRegion
 #     bb2 = get_bounding_box(region2, monitor2)
 #
 
-def capture_and_resize(region: ScreenRegion, img_x: int, img_y: int, save_image: bool) -> PIL.Image:
-    screenshot = region.screenshot()
-    img = PIL.Image.frombytes("RGB", screenshot.size, screenshot.bgra, "raw", "BGRX")  # Convert to PIL.Image
-
-    if save_image:
-        img.save(f"saved-images/monitor-{region.monitor_no}-{region.name}.png")
-
-    # Resize to the size of the pixel bounds
-    resized = img.resize((img_x, img_y), resample=PIL.Image.BILINEAR)
-    if save_image:
-        resized.save(f"saved-images/monitor-{region.monitor_no}-{region.name}-resized.png")
-
-    return resized
-
-
 # we just loop over the image in the same pattern as the LEDs are configured
 def create_color_data(img: PIL.Image, pixel_strip: PixelStrip, region: ScreenRegion) -> List[int]:
     color_data = []
@@ -44,7 +29,13 @@ def create_color_data(img: PIL.Image, pixel_strip: PixelStrip, region: ScreenReg
 
     for pixel in iter(pixel_strip.get_pixels_for_region(region)):
         # print(f"getting data for pixel: {pixel.x},{pixel.y}")
-        r, g, b = img.getpixel((pixel.x, pixel.y))
+        try:
+            r, g, b = img.getpixel((pixel.x, pixel.y))
+        except IndexError as e:
+            print(f"ERROR GETTING PIXEL: {pixel.x}, {pixel.y}")
+            print(str(e))
+            img.save(f"saved-images/error-log-{region.name}.png")
+            raise
         color_data.append(r)
         color_data.append(g)
         color_data.append(b)
