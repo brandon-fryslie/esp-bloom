@@ -20,6 +20,9 @@ import img_proc
 import signal
 import sys
 
+from region import ScreenRegion
+
+
 def signal_handler(sig, frame):
     print('Exiting...')
     sender.stop()  # do not forget to stop the sender
@@ -33,7 +36,7 @@ def send_data(sender, pixel_strips: List[PixelStrip], save_image):
     for pixel_strip in pixel_strips:
         pixel_data = []
         for region in pixel_strip.regions:
-            img = img_proc.capture_and_resize(region, pixel_strip.monitor, pixel_strip.row_length, pixel_strip.rows, save_image)
+            img = img_proc.capture_and_resize(region, pixel_strip.row_length, pixel_strip.rows, save_image)
             pixel_data += img_proc.create_color_data(img, pixel_strip, region)
 
         # print number of pixels
@@ -102,23 +105,30 @@ def _region_fn_universe_1(pixel: PixelAddress) -> str:
 def _region_fn_universe_3(pixel: PixelAddress) -> str:
     return "bottom"
 
+mss_instance = mss.mss()
+
+regionTop3 = ScreenRegion("top", 3, mss_instance)
+regionBottom3 = ScreenRegion("bottom", 3, mss_instance)
+regionTop1 = ScreenRegion("top", 1, mss_instance)
+regionBottom1 = ScreenRegion("bottom", 1, mss_instance)
+
 # 192.168.1.237
 pixel_strip1 = PixelStrip(
     strip_addr="192.168.1.237", universe=1, row_length=29, rows=4, start_left=True,
     start_bottom=True, region_fn=_region_fn_universe_1,
-    monitor=3, regions=["bottom", "top"],
+    regions=[regionBottom3, regionTop3],
 )
 
 pixel_strip2 = PixelStrip(
     strip_addr="192.168.1.240", universe=2, row_length=29, rows=4, start_left=True,
     start_bottom=True, region_fn=_region_fn_universe_1,
-    monitor=1, regions=["bottom", "top"],
+    regions=[regionBottom1, regionTop1],
 )
 
 pixel_strip3 = PixelStrip(
     strip_addr="192.168.1.243", universe=3, row_length=75, rows=1, start_left=True,
     start_bottom=True, region_fn=_region_fn_universe_3,
-    monitor=1, regions=["bottom"],
+    regions=[regionBottom1],
 )
 
 pixel_strips = [

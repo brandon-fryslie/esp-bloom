@@ -6,6 +6,8 @@
 # - LED # (on the strip)
 from typing import List, Callable, Optional
 
+from region import ScreenRegion
+
 
 class PixelAddress:
     def __init__(self, strip_addr: str, index: int, x: int, y: int, region: Optional[str] = None):
@@ -26,7 +28,7 @@ class PixelStrip:
     def __init__(self, strip_addr: str, universe: int,
                  row_length: int, rows: int, start_left: bool,
                  start_bottom: bool, region_fn: Callable[[PixelAddress], str],
-                 monitor: int, regions: List[str],
+                 regions: List[ScreenRegion],
         ):
         self.strip_addr = strip_addr
         self.universe = universe
@@ -35,7 +37,6 @@ class PixelStrip:
         self.start_left = start_left
         self.start_bottom = start_bottom
         self.region_fn = region_fn
-        self.monitor = monitor
         self.regions = regions
 
         self.pixels = self.generate_pixel_mapping()
@@ -46,8 +47,8 @@ class PixelStrip:
     def __repr__(self):
         return self.__str__()
 
-    def get_pixels_for_region(self, region: str):
-        res = [pixel for pixel in self.pixels if pixel.region == region]
+    def get_pixels_for_region(self, region: ScreenRegion):
+        res = [pixel for pixel in self.pixels if pixel.region == region.name]
         # print(f"got pixel for region {region}")
         # print(res)
         return res
