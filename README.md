@@ -28,3 +28,10 @@ for RGBW LEDs.
 
 The important settings are:
 - Color Order: GRBW
+
+## TODO
+
+- Check out this library: https://github.com/abhiTronix/vidgear
+    - Supposed to be faster for grabbing screenshots
+- Cache some screenshot data (we grab the same data multiple times per frame)
+- Fix PixelStrip4 (something isn't working related to the start offset)
